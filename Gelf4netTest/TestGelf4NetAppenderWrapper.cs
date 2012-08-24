@@ -1,16 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Esilog.Gelf4net.Appender;
+using Esilog.Gelf4net;
 
 namespace Gelf4netTest
 {
-    class TestGelf4NetAppenderWrapper : Gelf4NetAppender
-    {
-        public void TestAppend(log4net.Core.LoggingEvent loggingEvent)
-        {
-            Append(loggingEvent);
-        }
-    }
+	class TestGelf4NetAppenderWrapper : GelfAppenderBase
+	{
+		public void TestAppend(log4net.Core.LoggingEvent loggingEvent)
+		{
+			Append(loggingEvent);
+		}
+
+		protected sealed override void AppendCore(string message)
+		{
+			Console.WriteLine(message);
+		}
+	}
 }

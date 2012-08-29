@@ -70,11 +70,11 @@ namespace Esilog.Gelf4net
 		{
 			string renderedMessage = (Layout != null) ? RenderLoggingEvent(loggingEvent) : loggingEvent.RenderedMessage ?? loggingEvent.MessageObject.ToString();
 
+			string shortMessage = GetCustomShortMessage(loggingEvent) ?? renderedMessage.Substring(0, Math.Min(renderedMessage.Length, c_maxShortMessageLength));
+
 			string fullMessage = loggingEvent.ExceptionObject != null
 					   ? string.Format("{0} - {1}. {2}. {3}.", renderedMessage, loggingEvent.ExceptionObject.Source, loggingEvent.ExceptionObject.Message, loggingEvent.ExceptionObject.StackTrace)
 					   : renderedMessage;
-
-			string shortMessage = GetCustomShortMessage(loggingEvent) ?? renderedMessage.Substring(0, Math.Min(renderedMessage.Length, c_maxShortMessageLength));
 
 			var gelfMessage = new GelfMessage
 			{
@@ -112,8 +112,8 @@ namespace Esilog.Gelf4net
 			try
 			{
 				return objectType.GetProperties()
-					.Where(p => (p.Name.Equals("ShortName", StringComparison.InvariantCultureIgnoreCase) || p.Name.Equals("short_name", StringComparison.InvariantCultureIgnoreCase)) && typeof(string).IsAssignableFrom(p.PropertyType))
-					.Select(p => (string) p.GetValue(objectType, null))
+					.Where(p => (p.Name.Equals("ShortMessage", StringComparison.InvariantCultureIgnoreCase) || p.Name.Equals("short_message", StringComparison.InvariantCultureIgnoreCase)) && typeof(string).IsAssignableFrom(p.PropertyType))
+					.Select(p => (string) p.GetValue(messageObject, null))
 					.FirstOrDefault();
 			}
 			catch

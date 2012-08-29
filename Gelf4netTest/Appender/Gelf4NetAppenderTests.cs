@@ -85,7 +85,7 @@ namespace Gelf4netTest
 					UserName = "ElTesto"
 				};
 
-			var messageObject = new CustomMessage { ShortMessage = "This is a custom message to test per-message fields.", CustomFields = new Dictionary<string, string> { { "message1", "baz" }, { "message2", "baf" }, { "message3", "woohoo" } } };
+			var messageObject = new CustomMessage { ShortMessage = "This is a custom message to test per-message fields and overrides.", CustomFields = new Dictionary<string, string> { { "message1", "baz" }, { "message2", "baf" }, { "message3", "woohoo" } } };
 			data.Message = messageObject.ToString();
 			var logEvent = new LoggingEvent(GetType(), new Hierarchy(), data.LoggerName, data.Level, messageObject, new InvalidOperationException("This is a test exception!"));
 
@@ -123,7 +123,7 @@ namespace Gelf4netTest
 
 			public override string ToString()
 			{
-				return ShortMessage;
+				return "Default Custom Message ToString()";
 			}
 		}
 	}

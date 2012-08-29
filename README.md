@@ -39,6 +39,7 @@ This fork introduces a handful of breaking changes from the original [gelf4net](
 Accept loggingEvent.Properties, to send the variables to graylog2 as additional fields
 
 **log4net Xml Configuration**
+
 	<?xml version="1.0"?>
 	<configuration>
 		<configSections>

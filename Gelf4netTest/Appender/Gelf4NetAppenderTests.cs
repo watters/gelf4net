@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 using log4net.Core;
 using NUnit.Framework;
+using log4net.Repository.Hierarchy;
 
 namespace Gelf4netTest
 {
@@ -20,7 +22,7 @@ namespace Gelf4netTest
 			graylogServerHost = "192.168.1.102";
 		}
 
-		[Test()]
+		[Test]
 		public void AppendTest()
 		{
 			var gelfAppender = new TestGelf4NetAppenderWrapper();
@@ -66,7 +68,40 @@ namespace Gelf4netTest
 			gelfAppender.TestAppend(logEvent);
 		}
 
-		[Test()]
+		[Test]
+		public void AppendWithCustomPerMessageProperties()
+		{
+			var testAppender = new TestGelf4NetAppenderWrapper();
+			testAppender.RemoteAddress = "127.0.0.1";
+			testAppender.AdditionalFields = "global1:foo,global2:bar";
+			testAppender.ActivateOptions();
+
+			var data = new LoggingEventData
+				{
+					Domain = this.GetType().Name,
+					Level = Level.Debug,
+					LoggerName = "PerMessageProperties",
+					TimeStamp = DateTime.UtcNow,
+					UserName = "ElTesto"
+				};
+
+			var messageObject = new CustomMessage { Message = "This is a custom message to test per-message fields.", CustomFields = new Dictionary<string, string> { { "message1", "baz" }, { "message2", "baf" }, { "message3", "woohoo" } } };
+			data.Message = messageObject.ToString();
+			var logEvent = new LoggingEvent(this.GetType(), new Hierarchy(), data.LoggerName, data.Level, messageObject, null);
+
+			testAppender.TestAppend(logEvent);
+
+			JObject gelfMessage = JObject.Parse(testAppender.LastMessage);
+
+
+			Assert.AreEqual(gelfMessage["_global1"].ToString(), "foo");
+			Assert.AreEqual(gelfMessage["_global2"].ToString(), "bar");
+			Assert.AreEqual(gelfMessage["_message1"].ToString(), "baz");
+			Assert.AreEqual(gelfMessage["_message2"].ToString(), "baf");
+			Assert.AreEqual(gelfMessage["_message3"].ToString(), "woohoo");
+		}
+
+		[Test]
 		public void TestSendMessageIteration()
 		{
 			var array = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -77,6 +112,17 @@ namespace Gelf4netTest
 			{
 				array.Skip(i * max).Take(max).ToList<int>().ForEach(Console.WriteLine);
 				Console.WriteLine("---");
+			}
+		}
+
+		private class CustomMessage
+		{
+			public string Message { get; set; }
+			public Dictionary<string, string> CustomFields { get; set; }
+
+			public override string ToString()
+			{
+				return Message;
 			}
 		}
 	}

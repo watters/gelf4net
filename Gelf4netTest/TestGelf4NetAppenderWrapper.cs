@@ -13,6 +13,9 @@ namespace Gelf4netTest
 		protected sealed override void AppendCore(string message)
 		{
 			Console.WriteLine(message);
+			LastMessage = message;
 		}
+
+		public string LastMessage { get; set; }
 	}
 }

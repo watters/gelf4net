@@ -1,31 +1,40 @@
-# gelf4net
+# watters/gelf4net
 
 ## Overview
 
-[GELF][1]
+This fork introduces a handful of breaking changes from the original [gelf4net](https://github.com/jjchiw/gelf4net), including:
 
-[1]: https://github.com/Graylog2/graylog2-docs/wiki/GELF
+ * separate appenders for UDP and AMQP
+ * simplified class structure
+ * disallows UDP messages with more than 128 chunks (per [GELF spec](https://github.com/Graylog2/graylog2-docs/wiki/GELF))
+ * always sends file/line number if it's in the loggingEvent
+ * renamed a couple of configuration properties
 
+(NOTE: I've done less work on AMQP since I don't use it, but I'd expect it to work)
+ 
 ## Usage
 
 **Properties**
 
-- <strike>~~Dictionary<string, string> AdditionalFields~~</strike>
-- string AdditionalFields //Key:Value CSV ex: app:MyApp,version:1.0
-- string Facility
-- string GrayLogServerHost
-- string GrayLogServerHostIpAddress
-- int GrayLogServerPort
-- string Host
-- bool IncludeLocationInformation
-- bool SendAsGelfOrAmqp
-- int MaxChunkSize
+***All Appenders***
 
-- int GrayLogServerAmqpPort
-- string GrayLogServerAmqpUser
-- string GrayLogServerAmqpPassword
-- string GrayLogServerAmqpVirtualHost
-- string GrayLogServerAmqpQueue
+* string AdditionalFields //Key:Value CSV ex: app:MyApp,version:1.0
+* string Facility
+* string Host
+* string RemoteAddress
+* int RemotePort
+
+*** UDF Appender ***
+
+* int ChunkSize
+
+*** AMQP Appender ***
+
+* int GrayLogServerAmqpPort
+* string GrayLogServerAmqpUser
+* string GrayLogServerAmqpPassword
+* string GrayLogServerAmqpVirtualHost
+* string GrayLogServerAmqpQueue
 
 Accept loggingEvent.Properties, to send the variables to graylog2 as additional fields
 
@@ -39,11 +48,11 @@ Accept loggingEvent.Properties, to send the variables to graylog2 as additional 
 		<log4net>
 			<root>
 				<level value="DEBUG"/>
-					<appender-ref ref="GelfFileAppender"/>
+				<appender-ref ref="UdpGelfAppender"/>
 			</root>
 
-			<appender name="GelfFileAppender" type="Esilog.Gelf4net.Appender.Gelf4NetAppender, Esilog.Gelf4net">
-				<param name="GrayLogServerHost" value="public-graylog2.taulia.com" />
+			<appender name="UdpGelfAppender" type="Esilog.Gelf4net.UdpGelfAppender, Esilog.Gelf4net">
+				<param name="RemoteAddress" value="public-graylog2.taulia.com" />
 				<param name="Facility" value="RandomPhrases" />
 				<param name="AdditionalFields" value="app:RandomSentence,version:1.0" />
 
@@ -51,7 +60,6 @@ Accept loggingEvent.Properties, to send the variables to graylog2 as additional 
 					<param name="ConversionPattern" value="%-5p%d{yyyy-MM-dd hh:mm:ss}%m%n"/>
 				</layout>
 			</appender>
-
 		</log4net>
 
 		<startup>
@@ -61,7 +69,10 @@ Accept loggingEvent.Properties, to send the variables to graylog2 as additional 
 
 ## Copyright and License
 
-gelf4net created by Juan J. Chiw - Copyright 2011
+watters/gelf4net 
+
+forked from:
+jjchiw/gelf4net created by Juan J. Chiw - Copyright 2011
 
 based on:
 gelf4j created by Philip Stehlik - Copyright 2011

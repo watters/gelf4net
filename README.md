@@ -36,7 +36,17 @@ This fork introduces a handful of breaking changes from the original [gelf4net](
 * string GrayLogServerAmqpVirtualHost
 * string GrayLogServerAmqpQueue
 
-Accept loggingEvent.Properties, to send the variables to graylog2 as additional fields
+***Per-message custom fields***
+
+Any properties returned from LoggingEvent.GetProperties() will be appended as custom properties. This includes properties set on GlobalContext and ThreadContext (see: http://logging.apache.org/log4net/release/manual/contexts.html).
+
+Additionally, the appender will reflect over the LoggingEvent.MessageObject looking for properties of a type that implements IDictionary. It will then include all of these values as well. If name collisions are detected, the appender will prefer the most-specific values:
+
+ 1. Fields retrieved from MessageObject
+ 2. Fields retrieved from LoggingEvent.GetProperties()
+ 3. Fields specified in the appender configuration
+ 
+The core GELF fields cannot be overriden.
 
 **log4net Xml Configuration**
 

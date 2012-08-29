@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -92,15 +94,51 @@ namespace Esilog.Gelf4net
 				gelfMessage.Line = loggingEvent.LocationInformation.LineNumber;
 			}
 
-			string messageJson = JsonConvert.SerializeObject(gelfMessage);
+			List<IDictionary> fieldDictionaryies = new List<IDictionary> { globalAdditionalFields, loggingEvent.GetProperties() };
+			fieldDictionaryies.AddRange(RetrieveMessageSpecificFields(loggingEvent));
 
-			if ((globalAdditionalFields != null && globalAdditionalFields.Count != 0) || (loggingEvent.Properties != null && loggingEvent.Properties.Count != 0))
+			var messageJson = BuildMessageJson(gelfMessage, AssembleAdditionalFields(fieldDictionaryies));
+
+			return messageJson;
+		}
+
+		private static IEnumerable<IDictionary> RetrieveMessageSpecificFields(LoggingEvent loggingEvent)
+		{
+			var messageObject = loggingEvent.MessageObject;
+
+			// short circuit in the common case that the message object is a string
+			if (messageObject is string)
+				return null;
+
+			ReadOnlyCollection<IDictionary> messageFieldDictionaries = null;
+			var objectType = messageObject.GetType();
+			try
 			{
-				Dictionary<string, string> additionalFields = globalAdditionalFields ?? new Dictionary<string, string>();
+				// look for properties that are of types assignable from IDictionary
+				messageFieldDictionaries = objectType.GetProperties()
+					.Where(p => typeof(IDictionary).IsAssignableFrom(p.PropertyType))
+					.Select(p => (IDictionary) p.GetValue(messageObject, null))
+					.ToList().AsReadOnly();
+			}
+			catch
+			{
+				// just move on if we have any trouble fetching these 
+			}
 
-				if (loggingEvent.Properties != null)
+			return messageFieldDictionaries;
+		}
+
+		private static IDictionary<string, string> AssembleAdditionalFields(ICollection<IDictionary> fieldDictionaries)
+		{
+			var additionalFields = new Dictionary<string, string>();
+
+			if (fieldDictionaries != null)
+				foreach (var fieldDictionary in fieldDictionaries)
 				{
-					foreach (DictionaryEntry property in loggingEvent.Properties)
+					if (fieldDictionary == null || fieldDictionary.Count == 0)
+						continue;
+
+					foreach (DictionaryEntry property in fieldDictionary)
 					{
 						string key = property.Key as string;
 
@@ -117,15 +155,12 @@ namespace Esilog.Gelf4net
 					}
 				}
 
-				messageJson = AppendAdditionalFields(messageJson, additionalFields);
-			}
-
-			return messageJson;
+			return additionalFields;
 		}
 
-		private static string AppendAdditionalFields(string messageJson, Dictionary<string, string> additionalFields)
+		private static string BuildMessageJson(GelfMessage message, IDictionary<string, string> additionalFields)
 		{
-			var messageJObject = JObject.Parse(messageJson);
+			var messageJObject = JObject.FromObject(message);
 
 			foreach (var field in additionalFields)
 			{

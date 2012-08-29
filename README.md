@@ -24,11 +24,11 @@ This fork introduces a handful of breaking changes from the original [gelf4net](
 * string RemoteAddress
 * int RemotePort
 
-*** UDF Appender ***
+***UDF Appender***
 
 * int ChunkSize
 
-*** AMQP Appender ***
+***AMQP Appender***
 
 * int GrayLogServerAmqpPort
 * string GrayLogServerAmqpUser

@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -94,10 +93,10 @@ namespace Esilog.Gelf4net
 				gelfMessage.Line = loggingEvent.LocationInformation.LineNumber;
 			}
 
-			List<IDictionary> fieldDictionaryies = new List<IDictionary> { globalAdditionalFields, loggingEvent.GetProperties() };
-			fieldDictionaryies.AddRange(RetrieveMessageSpecificFields(loggingEvent));
+			List<IDictionary> fieldDictionaries = new List<IDictionary> { globalAdditionalFields, loggingEvent.GetProperties() };
+			fieldDictionaries.AddRange(RetrieveMessageSpecificFields(loggingEvent));
 
-			var messageJson = BuildMessageJson(gelfMessage, AssembleAdditionalFields(fieldDictionaryies));
+			var messageJson = BuildMessageJson(gelfMessage, AssembleAdditionalFields(fieldDictionaries));
 
 			return messageJson;
 		}
@@ -110,7 +109,7 @@ namespace Esilog.Gelf4net
 			if (messageObject is string)
 				return null;
 
-			ReadOnlyCollection<IDictionary> messageFieldDictionaries = null;
+			ReadOnlyCollection<IDictionary> messageFieldDictionaries = new List<IDictionary>().AsReadOnly();
 			var objectType = messageObject.GetType();
 			try
 			{

@@ -74,7 +74,7 @@ namespace Esilog.Gelf4net
 					   ? string.Format("{0} - {1}. {2}. {3}.", renderedMessage, loggingEvent.ExceptionObject.Source, loggingEvent.ExceptionObject.Message, loggingEvent.ExceptionObject.StackTrace)
 					   : renderedMessage;
 
-			string shortMessage = renderedMessage.Substring(0, Math.Min(renderedMessage.Length, c_maxShortMessageLength));
+			string shortMessage = GetCustomShortMessage(loggingEvent) ?? renderedMessage.Substring(0, Math.Min(renderedMessage.Length, c_maxShortMessageLength));
 
 			var gelfMessage = new GelfMessage
 			{
@@ -94,14 +94,37 @@ namespace Esilog.Gelf4net
 			}
 
 			List<IDictionary> fieldDictionaries = new List<IDictionary> { globalAdditionalFields, loggingEvent.GetProperties() };
-			fieldDictionaries.AddRange(RetrieveMessageSpecificFields(loggingEvent));
+			fieldDictionaries.AddRange(GetMessageSpecificFields(loggingEvent));
 
 			var messageJson = BuildMessageJson(gelfMessage, AssembleAdditionalFields(fieldDictionaries));
 
 			return messageJson;
 		}
 
-		private static IEnumerable<IDictionary> RetrieveMessageSpecificFields(LoggingEvent loggingEvent)
+		private static string GetCustomShortMessage(LoggingEvent loggingEvent)
+		{
+			var messageObject = loggingEvent.MessageObject;
+
+			if (messageObject is string)
+				return null;
+
+			Type objectType = messageObject.GetType();
+			try
+			{
+				return objectType.GetProperties()
+					.Where(p => (p.Name.Equals("ShortName", StringComparison.InvariantCultureIgnoreCase) || p.Name.Equals("short_name", StringComparison.InvariantCultureIgnoreCase)) && typeof(string).IsAssignableFrom(p.PropertyType))
+					.Select(p => (string) p.GetValue(objectType, null))
+					.FirstOrDefault();
+			}
+			catch
+			{
+				// just move on if we have any trouble fetching these
+			}
+
+			return null;
+		}
+
+		private static IEnumerable<IDictionary> GetMessageSpecificFields(LoggingEvent loggingEvent)
 		{
 			var messageObject = loggingEvent.MessageObject;
 

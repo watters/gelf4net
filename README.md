@@ -46,7 +46,7 @@ Additionally, the appender will reflect over the LoggingEvent.MessageObject look
  2. Fields retrieved from LoggingEvent.GetProperties()
  3. Fields specified in the appender configuration
  
-The core GELF fields cannot be overriden.
+The core GELF field "short_message" can be specified per-message by adding a string property to your custom message object (LoggingEvent.MessageObject) named "short_message" or "ShortMessage".
 
 **log4net Xml Configuration**
 

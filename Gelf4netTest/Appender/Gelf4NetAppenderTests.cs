@@ -78,16 +78,16 @@ namespace Gelf4netTest
 
 			var data = new LoggingEventData
 				{
-					Domain = this.GetType().Name,
+					Domain = GetType().Name,
 					Level = Level.Debug,
 					LoggerName = "PerMessageProperties",
 					TimeStamp = DateTime.UtcNow,
 					UserName = "ElTesto"
 				};
 
-			var messageObject = new CustomMessage { Message = "This is a custom message to test per-message fields.", CustomFields = new Dictionary<string, string> { { "message1", "baz" }, { "message2", "baf" }, { "message3", "woohoo" } } };
+			var messageObject = new CustomMessage { ShortMessage = "This is a custom message to test per-message fields.", CustomFields = new Dictionary<string, string> { { "message1", "baz" }, { "message2", "baf" }, { "message3", "woohoo" } } };
 			data.Message = messageObject.ToString();
-			var logEvent = new LoggingEvent(this.GetType(), new Hierarchy(), data.LoggerName, data.Level, messageObject, null);
+			var logEvent = new LoggingEvent(GetType(), new Hierarchy(), data.LoggerName, data.Level, messageObject, new InvalidOperationException("This is a test exception!"));
 
 			testAppender.TestAppend(logEvent);
 
@@ -99,6 +99,7 @@ namespace Gelf4netTest
 			Assert.AreEqual(gelfMessage["_message1"].ToString(), "baz");
 			Assert.AreEqual(gelfMessage["_message2"].ToString(), "baf");
 			Assert.AreEqual(gelfMessage["_message3"].ToString(), "woohoo");
+			Assert.AreEqual(messageObject.ShortMessage, gelfMessage["short_message"].ToString());
 		}
 
 		[Test]
@@ -117,12 +118,12 @@ namespace Gelf4netTest
 
 		private class CustomMessage
 		{
-			public string Message { get; set; }
+			public string ShortMessage { get; set; }
 			public Dictionary<string, string> CustomFields { get; set; }
 
 			public override string ToString()
 			{
-				return Message;
+				return ShortMessage;
 			}
 		}
 	}

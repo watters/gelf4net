@@ -76,7 +76,7 @@ namespace Esilog.Gelf4net
 					   ? string.Format("{0} - {1}. {2}. {3}.", renderedMessage, loggingEvent.ExceptionObject.Source, loggingEvent.ExceptionObject.Message, loggingEvent.ExceptionObject.StackTrace)
 					   : renderedMessage;
 
-			var gelfMessage = new GelfMessage
+			GelfMessage gelfMessage = new GelfMessage
 			{
 				Facility = (facility ?? c_defaultFacility),
 				Host = hostName,
@@ -96,14 +96,14 @@ namespace Esilog.Gelf4net
 			List<IDictionary> fieldDictionaries = new List<IDictionary> { globalAdditionalFields, loggingEvent.GetProperties() };
 			fieldDictionaries.AddRange(GetMessageSpecificFields(loggingEvent));
 
-			var messageJson = BuildMessageJson(gelfMessage, AssembleAdditionalFields(fieldDictionaries));
+			string messageJson = BuildMessageJson(gelfMessage, AssembleAdditionalFields(fieldDictionaries));
 
 			return messageJson;
 		}
 
 		private static string GetCustomShortMessage(LoggingEvent loggingEvent)
 		{
-			var messageObject = loggingEvent.MessageObject;
+			object messageObject = loggingEvent.MessageObject;
 
 			if (messageObject is string)
 				return null;
@@ -126,7 +126,7 @@ namespace Esilog.Gelf4net
 
 		private static IEnumerable<IDictionary> GetMessageSpecificFields(LoggingEvent loggingEvent)
 		{
-			var messageObject = loggingEvent.MessageObject;
+			object messageObject = loggingEvent.MessageObject;
 
 			// short circuit in the common case that the message object is a string
 			if (messageObject is string)
@@ -152,7 +152,7 @@ namespace Esilog.Gelf4net
 
 		private static IDictionary<string, string> AssembleAdditionalFields(ICollection<IDictionary> fieldDictionaries)
 		{
-			var additionalFields = new Dictionary<string, string>();
+			Dictionary<string, string> additionalFields = new Dictionary<string, string>();
 
 			if (fieldDictionaries != null)
 				foreach (var fieldDictionary in fieldDictionaries)
@@ -182,7 +182,7 @@ namespace Esilog.Gelf4net
 
 		private static string BuildMessageJson(GelfMessage message, IDictionary<string, string> additionalFields)
 		{
-			var messageJObject = JObject.FromObject(message);
+			JObject messageJObject = JObject.FromObject(message);
 
 			foreach (var field in additionalFields)
 			{

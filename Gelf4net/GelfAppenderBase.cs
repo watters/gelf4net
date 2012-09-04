@@ -127,12 +127,12 @@ namespace Esilog.Gelf4net
 		private static IEnumerable<IDictionary> GetMessageSpecificFields(LoggingEvent loggingEvent)
 		{
 			object messageObject = loggingEvent.MessageObject;
+			ReadOnlyCollection<IDictionary> messageFieldDictionaries = new List<IDictionary>().AsReadOnly();
 
 			// short circuit in the common case that the message object is a string
 			if (messageObject is string)
-				return null;
+				return messageFieldDictionaries;
 
-			ReadOnlyCollection<IDictionary> messageFieldDictionaries = new List<IDictionary>().AsReadOnly();
 			var objectType = messageObject.GetType();
 			try
 			{
